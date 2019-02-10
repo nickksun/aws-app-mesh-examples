@@ -16,12 +16,12 @@ Parameters:
   NodeAutoScalingGroupMinSize:
     Type: Number
     Description: Minimum size of Node Group ASG.
-    Default: 10
+    Default: 5
 
   NodeAutoScalingGroupMaxSize:
     Type: Number
     Description: Maximum size of Node Group ASG.
-    Default: 20
+    Default: 5
 
   NodeVolumeSize:
     Type: Number
@@ -47,13 +47,13 @@ Mappings:
   # Source: https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html
   AWSRegionToEKSAmi:
     eu-west-1:
-      AMI: ami-00c3b2d35bddd4f5c
+      AMI: ami-0a9006fb385703b54
     us-east-1:
-      AMI: ami-0a0b913ef3249b655
+      AMI: ami-0b4eb1d8782fc3aea
     us-east-2:
-      AMI: ami-0958a76db2d150238
+      AMI: ami-053cbe66e0033ebcf
     us-west-2:
-      AMI: ami-0f54a2f7d2e9c88b3
+      AMI: ami-094fa4044a2a3cf52
 
 Resources:
 
