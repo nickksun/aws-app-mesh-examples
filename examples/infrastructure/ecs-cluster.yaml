@@ -11,7 +11,7 @@ Parameters:
   InstanceType:
     Description: Which instance type should we use to build the ECS cluster?
     Type: String
-    Default: c4.large
+    Default: t3.medium
 
   ClusterSize:
     Description: How many ECS hosts do you want to initially deploy?
@@ -41,7 +41,7 @@ Mappings:
     us-east-2:
       AMI: ami-0307f7ccf6ea35750
     us-west-2:
-      AMI: ami-01b70aea4161476b7
+      AMI: ami-0d3bd9852d477ade8
 
 
 Resources:
