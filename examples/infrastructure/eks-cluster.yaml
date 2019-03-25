@@ -47,13 +47,13 @@ Mappings:
   # Source: https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html
   AWSRegionToEKSAmi:
     eu-west-1:
-      AMI: ami-0a9006fb385703b54
+      AMI: ami-098fb7e9b507904e7
     us-east-1:
-      AMI: ami-0b4eb1d8782fc3aea
+      AMI: ami-0eeeef929db40543c
     us-east-2:
-      AMI: ami-053cbe66e0033ebcf
+      AMI: ami-0484545fe7d3da96f
     us-west-2:
-      AMI: ami-094fa4044a2a3cf52
+      AMI: ami-0c28139856aaf9c3b
 
 Resources:
 
@@ -199,6 +199,7 @@ Resources:
 
   NodeGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
+    DependsOn: EKSCluster
     Properties:
       DesiredCapacity: !Ref NodeAutoScalingGroupMaxSize
       LaunchConfigurationName: !Ref NodeLaunchConfig
@@ -246,3 +247,6 @@ Resources:
                      --resource NodeGroup  \
                      --region ${AWS::Region}
 
+Outputs:
+  NodeInstanceRole:
+    Value: !GetAtt NodeInstanceRole.Arn

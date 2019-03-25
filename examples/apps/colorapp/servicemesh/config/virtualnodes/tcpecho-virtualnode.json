@@ -3,12 +3,11 @@
         "listeners": [
             {
                 "portMapping": {
-                    "port": 9080,
-                    "protocol": "http"
+                    "port": 2701,
+                    "protocol": "tcp"
                 },
                 "healthCheck": {
-                    "protocol": "http",
-                    "path": "/ping",
+                    "protocol": "tcp",
                     "healthyThreshold": 2,
                     "unhealthyThreshold": 2,
                     "timeoutMillis": 2000,
@@ -18,9 +17,9 @@
         ],
         "serviceDiscovery": {
             "dns": {
-                "hostname": "colorteller-blue@@SERVICES_DOMAIN@@"
+                "hostname": "tcpecho@@SERVICES_DOMAIN@@"
             }
         }
     },
-    "virtualNodeName": "colorteller-blue-vn"
+    "virtualNodeName": "tcpecho-vn"
 }
