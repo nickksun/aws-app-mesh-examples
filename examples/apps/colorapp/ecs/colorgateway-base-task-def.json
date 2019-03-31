@@ -77,5 +77,7 @@
   "taskRoleArn": $TASK_ROLE_ARN,
   "executionRoleArn": $EXECUTION_ROLE_ARN,
   "networkMode": "awsvpc",
-  "memory": "256"
+  "memory": "512",
+  "cpu": "256",
+  "requiresCompatibilities": [ "FARGATE" ]
 }
