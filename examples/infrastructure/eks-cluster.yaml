@@ -47,13 +47,13 @@ Mappings:
   # Source: https://docs.aws.amazon.com/eks/latest/userguide/eks-optimized-ami.html
   AWSRegionToEKSAmi:
     eu-west-1:
-      AMI: ami-01e08d22b9439c15a
+      AMI: ami-098fb7e9b507904e7
     us-east-1:
-      AMI: ami-0c24db5df6badc35a
+      AMI: ami-0eeeef929db40543c
     us-east-2:
-      AMI: ami-0c2e8d28b1f854c68
+      AMI: ami-0484545fe7d3da96f
     us-west-2:
-      AMI: ami-0a2abab4107669c1b
+      AMI: ami-0c28139856aaf9c3b
 
 Resources:
 
