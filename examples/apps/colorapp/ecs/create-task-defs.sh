@@ -34,6 +34,23 @@ xray_container_json=$(jq -n \
     --arg AWS_REGION $AWS_REGION \
     --arg AWS_LOG_STREAM_PREFIX_ENVOY "colorgateway-xray" \
     -f "${DIR}/xray-container.json")
+grafana_container_json=$(jq -n \
+    --arg ECS_SERVICE_LOG_GROUP $ecs_service_log_group \
+    --arg AWS_REGION $AWS_REGION \
+    --arg AWS_LOG_STREAM_PREFIX_GRAFANA "colorgateway-grafana" \
+    -f "${DIR}/grafana-container.json")
+prometheus_container_json=$(jq -n \
+    --arg PROMETHEUS_IMAGE $PROMETHEUS_IMAGE \
+    --arg ECS_SERVICE_LOG_GROUP $ecs_service_log_group \
+    --arg AWS_REGION $AWS_REGION \
+    --arg AWS_LOG_STREAM_PREFIX_PROMETHEUS "colorgateway-prometheus" \
+    -f "${DIR}/prometheus-container.json")
+stats_exporter_container_json=$(jq -n \
+    --arg STATS_EXPORTER_IMAGE $STATS_EXPORTER_IMAGE \
+    --arg ECS_SERVICE_LOG_GROUP $ecs_service_log_group \
+    --arg AWS_REGION $AWS_REGION \
+    --arg AWS_LOG_STREAM_PREFIX_STATS_EXPORTER "colorgateway-stats-exporter" \
+    -f "${DIR}/stats-exporter-container.json")
 task_def_json=$(jq -n \
     --arg NAME "$ENVIRONMENT_NAME-ColorGateway" \
     --arg STAGE "$APPMESH_STAGE" \
@@ -47,6 +64,9 @@ task_def_json=$(jq -n \
     --arg EXECUTION_ROLE_ARN $execution_role_arn \
     --argjson ENVOY_CONTAINER_JSON "${envoy_container_json}" \
     --argjson XRAY_CONTAINER_JSON "${xray_container_json}" \
+    --argjson GRAFANA_CONTAINER_JSON "${grafana_container_json}" \
+    --argjson PROMETHEUS_CONTAINER_JSON "${prometheus_container_json}" \
+    --argjson STATS_EXPORTER_CONTAINER_JSON "${stats_exporter_container_json}" \
     -f "${DIR}/colorgateway-base-task-def.json")
 task_def=$(aws --profile "${AWS_PROFILE}" --region "${AWS_REGION}" \
     ecs register-task-definition \

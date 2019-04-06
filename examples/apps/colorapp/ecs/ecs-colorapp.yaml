@@ -198,6 +198,9 @@ Resources:
 
   ColorGatewayService:
     Type: 'AWS::ECS::Service'
+    DependsOn:
+      - PrometheusLoadBalancerRule
+      - GrafanaLoadBalancerRule
     Properties:
       Cluster:
         'Fn::ImportValue': !Sub "${EnvironmentName}:ECSCluster"
@@ -218,6 +221,10 @@ Resources:
             - 'Fn::ImportValue': !Sub "${EnvironmentName}:PrivateSubnet1"
             - 'Fn::ImportValue': !Sub "${EnvironmentName}:PrivateSubnet2"
       TaskDefinition: { Ref: ColorGatewayTaskDefinition }
+      LoadBalancers:
+        - ContainerName: grafana
+          ContainerPort: 3000
+          TargetGroupArn: !Ref 'GrafanaTargetGroup'
 
   ### tester
   TesterService:
@@ -335,3 +342,96 @@ Resources:
       Cpu: 256
       RequiresCompatibilities: 
         - "FARGATE"
+  
+  ### Grafana public access
+
+  GrafanaTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 10
+      Matcher:
+        HttpCode: '302'
+      TargetType: ip
+      Name: !Sub "${EnvironmentName}-grafana-1"
+      Port: 3000
+      Protocol: HTTP
+      UnhealthyThresholdCount: 10
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      VpcId:
+        'Fn::ImportValue': !Sub "${EnvironmentName}:VPC"
+
+  GrafanaLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'GrafanaTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn:
+        'Fn::ImportValue': !Sub "${EnvironmentName}:PublicLoadBalancer"
+      Port: 3000
+      Protocol: HTTP
+  
+  ## Create a rule on the load balancer for routing traffic to the target group
+  GrafanaLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'GrafanaTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: ['*']
+      ListenerArn: !Ref 'GrafanaLoadBalancerListener'
+      Priority: 1
+
+  # Prometheus load balancer resources
+  PrometheusTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 10
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 10
+      Matcher: 
+        HttpCode: '405'
+      TargetType: ip
+      Name: !Sub "${EnvironmentName}-prometheus-1"
+      Port: 9090
+      Protocol: HTTP
+      UnhealthyThresholdCount: 10
+      TargetGroupAttributes:
+        - Key: deregistration_delay.timeout_seconds
+          Value: 30
+      VpcId:
+        'Fn::ImportValue': !Sub "${EnvironmentName}:VPC"
+    
+  PrometheusLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - TargetGroupArn: !Ref 'PrometheusTargetGroup'
+          Type: 'forward'
+      LoadBalancerArn: 
+        'Fn::ImportValue': !Sub "${EnvironmentName}:PublicLoadBalancer"
+      Port: 9090
+      Protocol: HTTP
+
+  ## Create a rule on the load balancer for routing traffic to the target group
+  PrometheusLoadBalancerRule:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref 'PrometheusTargetGroup'
+          Type: 'forward'
+      Conditions:
+        - Field: path-pattern
+          Values: ['*']
+      ListenerArn: !Ref 'PrometheusLoadBalancerListener'
+      Priority: 1
