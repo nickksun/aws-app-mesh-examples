@@ -8,7 +8,7 @@ cd examples/apps/colorapp
 sed "s/1234567/$(aws sts get-caller-identity --output text --query 'Account')/g" colorapp.env.template > colorapp.env
 source colorapp.env
 echo "# ## Return to examples path"
-cd ../../../
+cd ../../
 echo "# 2. Infrastructure"
 echo "# ## Setup VPC"
 ./infrastructure/vpc.sh
