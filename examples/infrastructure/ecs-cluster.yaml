@@ -35,6 +35,12 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: "/aws/service/ecs/optimized-ami/amazon-linux/recommended/image_id"
 
+Mappings:
+
+  AWSRegionToAmazonLinuxAMI:
+    ap-southeast-2:
+      AMI: ami-04481c741a0311bbb
+
 Resources:
 
   ECSCluster:
@@ -359,6 +365,77 @@ Resources:
       Vpc:
         'Fn::ImportValue': !Sub "${EnvironmentName}:VPC"
       Name: { Ref: ECSServicesDomain }
+
+  # Bastion Host
+  BastionInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ec2.amazonaws.com"
+            }
+          }]
+        }
+      Policies:
+        - 
+          PolicyName: "appmesh"
+          PolicyDocument: |
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Effect": "Allow",
+                      "Action": "appmesh:*",
+                      "Resource": "*"
+                  }
+              ]
+            }
+      ManagedPolicyArns: [
+        "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+        ]
+  
+  BastionInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref BastionInstanceRole
+
+  BastionSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the public facing load balancer
+      VpcId:
+        'Fn::ImportValue': !Sub "${EnvironmentName}:VPC"
+      SecurityGroupIngress:
+          # Allow access to Bastion from anywhere on the internet
+          - CidrIp: 0.0.0.0/0
+            IpProtocol: -1
+
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !FindInMap [ AWSRegionToAmazonLinuxAMI, !Ref 'AWS::Region', AMI ]
+      IamInstanceProfile: !Ref BastionInstanceProfile
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          GroupSet: 
+            - !Ref BastionSG
+          SubnetId: 
+            'Fn::ImportValue': !Sub "${EnvironmentName}:PrivateSubnet1"
+      Tags:
+        -
+          Key: Name
+          Value: !Join [ " - ", [ !Ref EnvironmentName, "Bastion" ] ]
+  
+  # Public Load Balancer
 
   PublicLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
