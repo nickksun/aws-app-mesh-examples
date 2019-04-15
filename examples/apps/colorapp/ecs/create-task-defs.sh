@@ -66,7 +66,6 @@ task_def_json=$(jq -n \
     --argjson XRAY_CONTAINER_JSON "${xray_container_json}" \
     --argjson GRAFANA_CONTAINER_JSON "${grafana_container_json}" \
     --argjson PROMETHEUS_CONTAINER_JSON "${prometheus_container_json}" \
-    --argjson STATS_EXPORTER_CONTAINER_JSON "${stats_exporter_container_json}" \
     -f "${DIR}/colorgateway-base-task-def.json")
 task_def=$(aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     ecs register-task-definition \
