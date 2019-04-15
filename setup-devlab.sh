@@ -24,7 +24,7 @@ echo "# ## Push images"
 ./ecr-deploy.sh
 echo "# ## Return to example path"
 cd ../../../
-4. ECS setup
+echo "#4. ECS setup"
 echo "# ## Deploy ECS Task definitions/services"
 cd apps/colorapp/ecs
 ./ecs-colorapp.sh
