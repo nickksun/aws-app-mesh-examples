@@ -2,7 +2,7 @@
 
 echo "# 0. Clone the repository"
 # git clone https://github.com/nickksun/aws-app-mesh-examples.git
-cd aws-app-mesh-examples
+# cd aws-app-mesh-examples
 echo "# 1. GETTING STARTED"
 cd examples/apps/colorapp
 sed "s/1234567/$(aws sts get-caller-identity --output text --query 'Account')/g" colorapp.env.template > colorapp.env
