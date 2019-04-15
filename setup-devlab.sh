@@ -1,7 +1,7 @@
 #!/bin/bash
 
 echo "# 0. Clone the repository"
-git clone https://github.com/nickksun/aws-app-mesh-examples.git
+# git clone https://github.com/nickksun/aws-app-mesh-examples.git
 cd aws-app-mesh-examples
 echo "# 1. GETTING STARTED"
 cd examples/apps/colorapp
