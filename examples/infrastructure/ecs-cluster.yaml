@@ -16,11 +16,7 @@ Parameters:
   ClusterSize:
     Description: How many ECS hosts do you want to initially deploy?
     Type: Number
-    Default: 5 
-
-  KeyName:
-    Description: The EC2 Key Pair to allow SSH access to the instances
-    Type: AWS::EC2::KeyPair::KeyName
+    Default: 0
   
   ECSServiceLogGroupRetentionInDays:
     Type: Number
@@ -94,7 +90,6 @@ Resources:
     Properties:
       ImageId: !Ref ECSAmi
       InstanceType: !Ref InstanceType
-      KeyName: !Ref KeyName
       SecurityGroups:
         - !Ref ECSInstancesSecurityGroup
       IamInstanceProfile: !Ref ECSInstanceProfile
