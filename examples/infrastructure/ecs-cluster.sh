@@ -11,6 +11,4 @@ aws --profile "${AWS_PROFILE}" --region "${AWS_DEFAULT_REGION}" \
     --template-file "${DIR}/ecs-cluster.yaml"  \
     --parameter-overrides \
     EnvironmentName="${ENVIRONMENT_NAME}" \
-    KeyName="${KEY_PAIR_NAME}" \
-    ECSServicesDomain="${SERVICES_DOMAIN}" \
-    ClusterSize="${CLUSTER_SIZE:-5}"
+    ECSServicesDomain="${SERVICES_DOMAIN}"

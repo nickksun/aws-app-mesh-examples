@@ -495,10 +495,6 @@ Outputs:
     Description: A reference to ECS service auto scaling role
     Value: !GetAtt ECSServiceAutoScalingRole.Arn
 
-  ECSAutoScalingGroupName:
-    Description: A reference to ECS AutoScaling Group Name
-    Value: !Ref ECSAutoScalingGroup
-
   ECSServiceDiscoveryNamespace:
     Description: A SDS namespace that will be used by all services in this cluster
     Value: !Ref ECSServiceDiscoveryNamespace
