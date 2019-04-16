@@ -1,5 +1,6 @@
 #!/bin/bash
-
+sudo yum install -y jq
+echo "****************** Start building ******************"
 echo "# 0. Clone the repository"
 # git clone https://github.com/nickksun/aws-app-mesh-examples.git
 # cd aws-app-mesh-examples
