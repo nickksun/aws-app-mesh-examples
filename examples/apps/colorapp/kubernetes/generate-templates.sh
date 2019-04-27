@@ -381,26 +381,26 @@ spec:
 ---
 
 # tester-app
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: tester-app
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: tester-app
-  template:
-    metadata:
-      labels:
-        app: tester-app
-    spec:
-      containers:
-        - name: tester-app
-          image: "tstrohmeier/alpine-infinite-curl"
-          env:
-            - name: "HOST"
-              value: "http://colorgateway.${SERVICES_DOMAIN}:9080/color"
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: tester-app
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: tester-app
+#   template:
+#     metadata:
+#       labels:
+#         app: tester-app
+#     spec:
+#       containers:
+#         - name: tester-app
+#           image: "tstrohmeier/alpine-infinite-curl"
+#           env:
+#             - name: "HOST"
+#               value: "http://colorgateway.${SERVICES_DOMAIN}:9080/color"
 ---
 
 # tcpecho
