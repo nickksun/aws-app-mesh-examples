@@ -7,7 +7,7 @@ if [ -z $STATS_EXPORTER_IMAGE ]; then
     echo "COLOR_TELLER_IMAGE environment variable is not set"
     exit 1
 fi
-
+mvn build
 # build
 docker build -t $STATS_EXPORTER_IMAGE .
 

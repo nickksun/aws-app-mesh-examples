@@ -54,6 +54,8 @@ Mappings:
       AMI: ami-0484545fe7d3da96f
     us-west-2:
       AMI: ami-0c28139856aaf9c3b
+    ap-southeast-2:
+      AMI: ami-0f0121e9e64ebd3dc
 
 Resources:
 

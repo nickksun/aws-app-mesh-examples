@@ -49,15 +49,15 @@ func (h *colorHandler) ServeHTTP(writer http.ResponseWriter, request *http.Reque
 
 type pingHandler struct{}
 func (h *pingHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	color := os.Getenv("COLOR")
-	if color == "black" {
-		// time.Sleep(10 * time.Second)
-		log.Println("ping requested, reponding with HTTP 503")
-		writer.WriteHeader(http.StatusServiceUnavailable)
-	} else {
-		log.Println("ping requested, reponding with HTTP 200")
-		writer.WriteHeader(http.StatusOK)
-	}
+	// color := os.Getenv("COLOR")
+	// if color == "black" {
+	// 	// time.Sleep(10 * time.Second)
+	// 	log.Println("ping requested, reponding with HTTP 503")
+	// 	writer.WriteHeader(http.StatusServiceUnavailable)
+	// } else {
+	log.Println("ping requested, reponding with HTTP 200")
+	writer.WriteHeader(http.StatusOK)
+	// }
 	
 }
 

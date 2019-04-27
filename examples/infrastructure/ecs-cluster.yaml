@@ -16,11 +16,7 @@ Parameters:
   ClusterSize:
     Description: How many ECS hosts do you want to initially deploy?
     Type: Number
-    Default: 5 
-
-  KeyName:
-    Description: The EC2 Key Pair to allow SSH access to the instances
-    Type: AWS::EC2::KeyPair::KeyName
+    Default: 0
   
   ECSServiceLogGroupRetentionInDays:
     Type: Number
@@ -35,6 +31,12 @@ Parameters:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: "/aws/service/ecs/optimized-ami/amazon-linux/recommended/image_id"
 
+Mappings:
+
+  AWSRegionToAmazonLinuxAMI:
+    ap-southeast-2:
+      AMI: ami-04481c741a0311bbb
+
 Resources:
 
   ECSCluster:
@@ -42,153 +44,152 @@ Resources:
     Properties:
       ClusterName: !Ref EnvironmentName
 
-  ECSInstancesSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties: 
-      GroupDescription: "Security group for the instances"
-      VpcId:
-        'Fn::ImportValue': !Sub "${EnvironmentName}:VPC"
-      SecurityGroupIngress:
-        - CidrIp:
-            'Fn::ImportValue': !Sub "${EnvironmentName}:VpcCIDR"
-          IpProtocol: -1
+  # ECSInstancesSecurityGroup:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties: 
+  #     GroupDescription: "Security group for the instances"
+  #     VpcId:
+  #       'Fn::ImportValue': !Sub "${EnvironmentName}:VPC"
+  #     SecurityGroupIngress:
+  #       - CidrIp:
+  #           'Fn::ImportValue': !Sub "${EnvironmentName}:VpcCIDR"
+  #         IpProtocol: -1
 
-  ECSAutoScalingGroup:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    Properties:
-      VPCZoneIdentifier: 
-        - 'Fn::ImportValue': !Sub "${EnvironmentName}:PrivateSubnet1"
-        - 'Fn::ImportValue': !Sub "${EnvironmentName}:PrivateSubnet2"
-      LaunchConfigurationName: !Ref ECSLaunchConfiguration
-      MinSize: !Ref ClusterSize
-      MaxSize: !Ref ClusterSize
-      DesiredCapacity: !Ref ClusterSize
-      Tags:
-        - Key: Name
-          Value: !Sub ${EnvironmentName} ECS host
-          PropagateAtLaunch: true
-    CreationPolicy:
-      ResourceSignal:
-        Timeout: PT15M
-    UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MinInstancesInService: 1
-        MaxBatchSize: 1
-        PauseTime: PT15M
-        SuspendProcesses:
-          - HealthCheck
-          - ReplaceUnhealthy
-          - AZRebalance
-          - AlarmNotification
-          - ScheduledActions
-        WaitOnResourceSignals: true
+  # ECSAutoScalingGroup:
+  #   Type: AWS::AutoScaling::AutoScalingGroup
+  #   Properties:
+  #     VPCZoneIdentifier: 
+  #       - 'Fn::ImportValue': !Sub "${EnvironmentName}:PrivateSubnet1"
+  #       - 'Fn::ImportValue': !Sub "${EnvironmentName}:PrivateSubnet2"
+  #     LaunchConfigurationName: !Ref ECSLaunchConfiguration
+  #     MinSize: !Ref ClusterSize
+  #     MaxSize: !Ref ClusterSize
+  #     DesiredCapacity: !Ref ClusterSize
+  #     Tags:
+  #       - Key: Name
+  #         Value: !Sub ${EnvironmentName} ECS host
+  #         PropagateAtLaunch: true
+  #   CreationPolicy:
+  #     ResourceSignal:
+  #       Timeout: PT15M
+  #   UpdatePolicy:
+  #     AutoScalingRollingUpdate:
+  #       MinInstancesInService: 1
+  #       MaxBatchSize: 1
+  #       PauseTime: PT15M
+  #       SuspendProcesses:
+  #         - HealthCheck
+  #         - ReplaceUnhealthy
+  #         - AZRebalance
+  #         - AlarmNotification
+  #         - ScheduledActions
+  #       WaitOnResourceSignals: true
 
-  ECSLaunchConfiguration:
-    Type: AWS::AutoScaling::LaunchConfiguration
-    Properties:
-      ImageId: !Ref ECSAmi
-      InstanceType: !Ref InstanceType
-      KeyName: !Ref KeyName
-      SecurityGroups:
-        - !Ref ECSInstancesSecurityGroup
-      IamInstanceProfile: !Ref ECSInstanceProfile
-      UserData:
-        "Fn::Base64": !Sub |
-          #!/bin/bash
-          yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
-          yum install -y aws-cfn-bootstrap hibagent
-          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
-          /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
-          /usr/bin/enable-ec2-spot-hibernation
+  # ECSLaunchConfiguration:
+  #   Type: AWS::AutoScaling::LaunchConfiguration
+  #   Properties:
+  #     ImageId: !Ref ECSAmi
+  #     InstanceType: !Ref InstanceType
+  #     SecurityGroups:
+  #       - !Ref ECSInstancesSecurityGroup
+  #     IamInstanceProfile: !Ref ECSInstanceProfile
+  #     UserData:
+  #       "Fn::Base64": !Sub |
+  #         #!/bin/bash
+  #         yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+  #         yum install -y aws-cfn-bootstrap hibagent
+  #         /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+  #         /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+  #         /usr/bin/enable-ec2-spot-hibernation
 
-    Metadata:
-      AWS::CloudFormation::Init:
-        config:
-          packages:
-            yum:
-              awslogs: []
+  #   Metadata:
+  #     AWS::CloudFormation::Init:
+  #       config:
+  #         packages:
+  #           yum:
+  #             awslogs: []
 
-          commands:
-            01_add_instance_to_cluster:
-              command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
-          files:
-            "/etc/cfn/cfn-hup.conf":
-              mode: 000400
-              owner: root
-              group: root
-              content: !Sub |
-                [main]
-                stack=${AWS::StackId}
-                region=${AWS::Region}
+  #         commands:
+  #           01_add_instance_to_cluster:
+  #             command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+  #         files:
+  #           "/etc/cfn/cfn-hup.conf":
+  #             mode: 000400
+  #             owner: root
+  #             group: root
+  #             content: !Sub |
+  #               [main]
+  #               stack=${AWS::StackId}
+  #               region=${AWS::Region}
 
-            "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
-              content: !Sub |
-                [cfn-auto-reloader-hook]
-                triggers=post.update
-                path=Resources.ECSLaunchConfiguration.Metadata.AWS::CloudFormation::Init
-                action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+  #           "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+  #             content: !Sub |
+  #               [cfn-auto-reloader-hook]
+  #               triggers=post.update
+  #               path=Resources.ECSLaunchConfiguration.Metadata.AWS::CloudFormation::Init
+  #               action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
 
-            "/etc/awslogs/awscli.conf":
-              content: !Sub |
-                [plugins]
-                cwlogs = cwlogs
-                [default]
-                region = ${AWS::Region}
+  #           "/etc/awslogs/awscli.conf":
+  #             content: !Sub |
+  #               [plugins]
+  #               cwlogs = cwlogs
+  #               [default]
+  #               region = ${AWS::Region}
 
-            "/etc/awslogs/awslogs.conf":
-              content: !Sub |
-                [general]
-                state_file = /var/lib/awslogs/agent-state
+  #           "/etc/awslogs/awslogs.conf":
+  #             content: !Sub |
+  #               [general]
+  #               state_file = /var/lib/awslogs/agent-state
 
-                [/var/log/dmesg]
-                file = /var/log/dmesg
-                log_group_name = ${ECSCluster}-/var/log/dmesg
-                log_stream_name = ${ECSCluster}
+  #               [/var/log/dmesg]
+  #               file = /var/log/dmesg
+  #               log_group_name = ${ECSCluster}-/var/log/dmesg
+  #               log_stream_name = ${ECSCluster}
 
-                [/var/log/messages]
-                file = /var/log/messages
-                log_group_name = ${ECSCluster}-/var/log/messages
-                log_stream_name = ${ECSCluster}
-                datetime_format = %b %d %H:%M:%S
+  #               [/var/log/messages]
+  #               file = /var/log/messages
+  #               log_group_name = ${ECSCluster}-/var/log/messages
+  #               log_stream_name = ${ECSCluster}
+  #               datetime_format = %b %d %H:%M:%S
 
-                [/var/log/docker]
-                file = /var/log/docker
-                log_group_name = ${ECSCluster}-/var/log/docker
-                log_stream_name = ${ECSCluster}
-                datetime_format = %Y-%m-%dT%H:%M:%S.%f
+  #               [/var/log/docker]
+  #               file = /var/log/docker
+  #               log_group_name = ${ECSCluster}-/var/log/docker
+  #               log_stream_name = ${ECSCluster}
+  #               datetime_format = %Y-%m-%dT%H:%M:%S.%f
 
-                [/var/log/ecs/ecs-init.log]
-                file = /var/log/ecs/ecs-init.log.*
-                log_group_name = ${ECSCluster}-/var/log/ecs/ecs-init.log
-                log_stream_name = ${ECSCluster}
-                datetime_format = %Y-%m-%dT%H:%M:%SZ
+  #               [/var/log/ecs/ecs-init.log]
+  #               file = /var/log/ecs/ecs-init.log.*
+  #               log_group_name = ${ECSCluster}-/var/log/ecs/ecs-init.log
+  #               log_stream_name = ${ECSCluster}
+  #               datetime_format = %Y-%m-%dT%H:%M:%SZ
 
-                [/var/log/ecs/ecs-agent.log]
-                file = /var/log/ecs/ecs-agent.log.*
-                log_group_name = ${ECSCluster}-/var/log/ecs/ecs-agent.log
-                log_stream_name = ${ECSCluster}
-                datetime_format = %Y-%m-%dT%H:%M:%SZ
+  #               [/var/log/ecs/ecs-agent.log]
+  #               file = /var/log/ecs/ecs-agent.log.*
+  #               log_group_name = ${ECSCluster}-/var/log/ecs/ecs-agent.log
+  #               log_stream_name = ${ECSCluster}
+  #               datetime_format = %Y-%m-%dT%H:%M:%SZ
 
-                [/var/log/ecs/audit.log]
-                file = /var/log/ecs/audit.log.*
-                log_group_name = ${ECSCluster}-/var/log/ecs/audit.log
-                log_stream_name = ${ECSCluster}
-                datetime_format = %Y-%m-%dT%H:%M:%SZ
+  #               [/var/log/ecs/audit.log]
+  #               file = /var/log/ecs/audit.log.*
+  #               log_group_name = ${ECSCluster}-/var/log/ecs/audit.log
+  #               log_stream_name = ${ECSCluster}
+  #               datetime_format = %Y-%m-%dT%H:%M:%SZ
 
-          services:
-            sysvinit:
-              cfn-hup:
-                enabled: true
-                ensureRunning: true
-                files:
-                  - /etc/cfn/cfn-hup.conf
-                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
-              awslogs:
-                enabled: true
-                ensureRunning: true
-                files:
-                  - /etc/awslogs/awslogs.conf
-                  - /etc/awslogs/awscli.conf
+  #         services:
+  #           sysvinit:
+  #             cfn-hup:
+  #               enabled: true
+  #               ensureRunning: true
+  #               files:
+  #                 - /etc/cfn/cfn-hup.conf
+  #                 - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+  #             awslogs:
+  #               enabled: true
+  #               ensureRunning: true
+  #               files:
+  #                 - /etc/awslogs/awslogs.conf
+  #                 - /etc/awslogs/awscli.conf
 
   # This IAM Role is attached to all of the ECS hosts. It is based on the default role
   # published here:
@@ -360,6 +361,77 @@ Resources:
         'Fn::ImportValue': !Sub "${EnvironmentName}:VPC"
       Name: { Ref: ECSServicesDomain }
 
+  # Bastion Host
+  BastionInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Path: /
+      AssumeRolePolicyDocument: |
+        {
+          "Statement": [{
+            "Action": "sts:AssumeRole",
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "ec2.amazonaws.com"
+            }
+          }]
+        }
+      Policies:
+        - 
+          PolicyName: "appmesh"
+          PolicyDocument: |
+            {
+              "Version": "2012-10-17",
+              "Statement": [
+                  {
+                      "Effect": "Allow",
+                      "Action": "appmesh:*",
+                      "Resource": "*"
+                  }
+              ]
+            }
+      ManagedPolicyArns: [
+        "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
+        ]
+  
+  BastionInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref BastionInstanceRole
+
+  BastionSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the public facing load balancer
+      VpcId:
+        'Fn::ImportValue': !Sub "${EnvironmentName}:VPC"
+      SecurityGroupIngress:
+          # Allow access to Bastion from anywhere on the internet
+          - CidrIp: 0.0.0.0/0
+            IpProtocol: -1
+
+  BastionInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: !FindInMap [ AWSRegionToAmazonLinuxAMI, !Ref 'AWS::Region', AMI ]
+      IamInstanceProfile: !Ref BastionInstanceProfile
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          GroupSet: 
+            - !Ref BastionSG
+          SubnetId: 
+            'Fn::ImportValue': !Sub "${EnvironmentName}:PrivateSubnet1"
+      Tags:
+        -
+          Key: Name
+          Value: !Join [ " - ", [ !Ref EnvironmentName, "Bastion" ] ]
+  
+  # Public Load Balancer
+
   PublicLoadBalancerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -422,10 +494,6 @@ Outputs:
   ECSServiceAutoScalingRole:
     Description: A reference to ECS service auto scaling role
     Value: !GetAtt ECSServiceAutoScalingRole.Arn
-
-  ECSAutoScalingGroupName:
-    Description: A reference to ECS AutoScaling Group Name
-    Value: !Ref ECSAutoScalingGroup
 
   ECSServiceDiscoveryNamespace:
     Description: A SDS namespace that will be used by all services in this cluster
